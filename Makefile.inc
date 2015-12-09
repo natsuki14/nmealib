@@ -49,14 +49,22 @@ ifeq ($(strip $(VERSION)),)
 VERSION=0.0.0
 endif
 
+COMMONCFLAGS := -Wall -Wextra -Wold-style-definition -Wdeclaration-after-statement -Wmissing-prototypes -Wstrict-prototypes \
+             -Wmissing-declarations -Wsign-compare -Waggregate-return -Wmissing-noreturn -Wmissing-format-attribute \
+             -Wno-multichar -Wno-deprecated-declarations -Wendif-labels -Wwrite-strings -Wbad-function-cast \
+             -Wpointer-arith -Wcast-qual -Wshadow -Wformat -Wsequence-point -Wcast-align -Wnested-externs \
+             -Winline -Wdisabled-optimization -funit-at-a-time -fPIC -ggdb -Wformat=2 -Winit-self -Wmissing-include-dirs \
+             -Wswitch-default -Wswitch-enum
+GCCCFLAGS := $(COMMONCFLAGS) -fearly-inlining -finline-functions-called-once -finline-limit=350
+CLANGCFLAGS := $(COMMONCFLAGS)
+
 CC ?= gcc
-CFLAGS ?= -Wall -Wextra -Wold-style-definition -Wdeclaration-after-statement -Wmissing-prototypes -Wstrict-prototypes \
-          -Wmissing-declarations -Wsign-compare -Waggregate-return -Wmissing-noreturn -Wmissing-format-attribute \
-          -Wno-multichar -Wno-deprecated-declarations -Wendif-labels -Wwrite-strings -Wbad-function-cast \
-          -Wpointer-arith -Wcast-qual -Wshadow -Wformat -Wsequence-point -Wcast-align -Wnested-externs \
-          -Winline -Wdisabled-optimization -finline-functions-called-once -funit-at-a-time -fearly-inlining \
-          -finline-limit=350 -fPIC -ggdb -Wformat=2 -Winit-self -Wmissing-include-dirs \
-          -Wswitch-default -Wswitch-enum
+
+ifneq ($(CC),clang)
+CFLAGS ?= $(GCCCFLAGS)
+else
+CFLAGS ?= $(CLANGCFLAGS)
+endif
 
 ifeq ($(DEBUG),0)
 CFLAGS+= -O2
