@@ -31,8 +31,14 @@
 #include <assert.h>
 #include <ctype.h>
 
-#define first_eol_char  ('\r')
-#define second_eol_char ('\n')
+static inline bool is_first_eol(char c) {
+  /* Some GPS receivers (e.g. GlobalSat BU-353 S4) use LFLF instead of CRLF. */
+  return c == '\r' || c == '\n';
+}
+
+static inline bool is_second_eol(char c) {
+  return c == '\n';
+}
 
 static void reset_sentence_parser(nmeaPARSER * parser, sentence_parser_state new_state) {
   assert(parser);
@@ -113,7 +119,7 @@ static bool nmea_parse_sentence_character(nmeaPARSER *parser, const char * c) {
       if (*c == '*') {
         parser->sentence_parser.state = READ_CHECKSUM;
         parser->sentence_parser.sentence_checksum_chars_count = 0;
-      } else if (*c == first_eol_char) {
+      } else if (is_first_eol(*c)) {
         parser->sentence_parser.state = READ_EOL;
         parser->sentence_parser.sentence_eol_chars_count = 0;
       } else if (isInvalidNMEACharacter(c)) {
@@ -152,7 +158,7 @@ static bool nmea_parse_sentence_character(nmeaPARSER *parser, const char * c) {
     case READ_EOL:
       switch (parser->sentence_parser.sentence_eol_chars_count) {
         case 0:
-          if (*c != first_eol_char) {
+          if (!is_first_eol(*c)) {
             reset_sentence_parser(parser, SKIP_UNTIL_START);
           } else {
             parser->sentence_parser.sentence_eol_chars_count = 1;
@@ -160,7 +166,7 @@ static bool nmea_parse_sentence_character(nmeaPARSER *parser, const char * c) {
           break;
 
         case 1:
-          if (*c != second_eol_char) {
+          if (!is_second_eol(*c)) {
             reset_sentence_parser(parser, SKIP_UNTIL_START);
           } else {
             parser->sentence_parser.state = SKIP_UNTIL_START;
